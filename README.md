@@ -1,2 +1,2 @@
 # TransformerLM
-Implementation of transformer LM inspired by the paper Attention is all you need
+Implementation of transformer language model in pytorch inspired by the paper Attention is all you need
