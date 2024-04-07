@@ -39,8 +39,14 @@ class CustomTokenizer:
     def token_to_id(self, token) -> int | None:
         return self.tokenizer.token_to_id(token)
 
-    def encode(self, source: list[list[str]]) -> list[int]:
-        return [self.start_token_idx] + sum([self.tokenizer.encode(s).ids for s in source], []) + [self.end_token_idx]
+    def encode(self, source: list[list[str]], add_special_tokens: bool = True, add_end_token: bool = True) -> list[int]:
+        if add_special_tokens:
+            if add_end_token:
+                return [self.start_token_idx] + sum([self.tokenizer.encode(s).ids for s in source], []) + [self.end_token_idx]
+            return [self.start_token_idx] + sum([self.tokenizer.encode(s).ids for s in source], [])
+        return sum([self.tokenizer.encode(s).ids for s in source], [])
+
+
 
     def decode(self, encoded: list[int]) -> str:
         decoded = self.tokenizer.decode(encoded, skip_special_tokens=True)
@@ -270,7 +276,7 @@ class TransformerLanguageModel(torch.nn.Module):
 
         device = next(self.parameters()).device
         with torch.no_grad():
-            result = [self.tokenizer.start_token_idx] + self.tokenizer.encode(sentence)
+            result = [self.tokenizer.start_token_idx] + self.tokenizer.encode(sentence, add_special_tokens=False)
             while len(result) < limit:
                 y = torch.tensor([result], dtype=torch.long, device=device)
                 e = self.embedding(y)
@@ -316,7 +322,7 @@ class TransformerLanguageModel(torch.nn.Module):
         device = next(self.parameters()).device
 
         with torch.no_grad():
-            beam = [([self.tokenizer.start_token_idx] + self.tokenizer.encode(sentence), 0)] * beam_len
+            beam = [([self.tokenizer.start_token_idx] + self.tokenizer.encode(sentence, add_special_tokens=False), 0)] * beam_len
             for _ in range(limit):
                 new_candidates = []
                 if all(candidate[0][-1] == self.tokenizer.end_token_idx for candidate in beam):
