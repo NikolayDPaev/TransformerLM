@@ -306,7 +306,10 @@ class TransformerLanguageModel(torch.nn.Module):
                     indices_outside_nucleus = sorted_i[sorted_indices_outside_nucleus]
                     z[indices_outside_nucleus] = 0
                     wordId = torch.multinomial(z, 1)
-                else: assert(False)
+                else:
+                    for cell in self.decoder_cells:
+                        cell.clear_cache()
+                    assert(False)
 
                 if wordId == self.tokenizer.end_token_idx:
                     break
